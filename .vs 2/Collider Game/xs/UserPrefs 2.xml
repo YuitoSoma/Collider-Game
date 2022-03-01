@@ -1,0 +1,22 @@
+﻿<Properties StartupConfiguration="{B1455572-4D2D-CC40-29D8-CC5B365E29C8}|">
+  <MonoDevelop.Ide.Workbench ActiveDocument="Assets/Photon/PhotonUnityNetworking/Code/PhotonView.cs">
+    <Files>
+      <File FileName="Assets/Photon/PhotonChat/Demos/DemoChat/ChatGui.cs" Line="354" Column="1" />
+      <File FileName="Assets/Scripts/SceneController.cs" />
+      <File FileName="Assets/Scripts/AvatarController.cs" />
+      <File FileName="Assets/Scripts/AvatarTransformer.cs" />
+      <File FileName="Assets/Scripts/VoiceController.cs" />
+      <File FileName="Assets/Photon/PhotonUnityNetworking/UtilityScripts/PhotonUnityNetworking.Utilities.asmdef" />
+      <File FileName="Assets/Photon/PhotonUnityNetworking/Code/PhotonUnityNetworking.asmdef" />
+      <File FileName="Photon/MonoBehaviour.cs" />
+      <File FileName="Assets/Photon/PhotonUnityNetworking/Code/PhotonView.cs" Line="142" Column="22" />
+    </Files>
+  </MonoDevelop.Ide.Workbench>
+  <MonoDevelop.Ide.DebuggingService.PinnedWatches />
+  <MonoDevelop.Ide.Workspace ActiveConfiguration="Debug" />
+  <MonoDevelop.Ide.ItemProperties.Assembly-CSharp PreferredExecutionTarget="1366bb54-157a-4b67-8c4c-266cc8b11e09" />
+  <MonoDevelop.Ide.DebuggingService.Breakpoints>
+    <BreakpointStore />
+  </MonoDevelop.Ide.DebuggingService.Breakpoints>
+  <MultiItemStartupConfigurations />
+</Properties>

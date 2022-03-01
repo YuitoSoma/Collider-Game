@@ -1,5 +1,6 @@
 ﻿using UnityEngine;
 using Photon.Pun;
+
 public class AvatarController :MonoBehaviour
 {
     private PhotonView photonView;
@@ -8,7 +9,7 @@ public class AvatarController :MonoBehaviour
     public float upForce = 200f; //上方向にかける力
     private bool isGround; //着地しているかどうかの判定
 
-    private void Start()
+    void Start()
     {
         photonView = GetComponent<PhotonView>();
         rb = GetComponent<Rigidbody>();
@@ -21,26 +22,27 @@ public class AvatarController :MonoBehaviour
             return;
         }
 
-        //前進
+        //　前進
         if (OVRInput.Get(OVRInput.RawButton.RHandTrigger) || Input.GetKey(KeyCode.UpArrow)) Forward();
 
-        //後退
+        //　後退
         if (OVRInput.Get(OVRInput.RawButton.LHandTrigger) || Input.GetKey(KeyCode.DownArrow))   Back();
 
-        //右回転
+        //　右回転
         if (OVRInput.Get(OVRInput.RawButton.RIndexTrigger) || Input.GetKey(KeyCode.RightArrow)) RRot();
 
-        //左回転
+        //　左回転
         if (OVRInput.Get(OVRInput.RawButton.LIndexTrigger) || Input.GetKey(KeyCode.LeftArrow))  LRot();
 
-        //跳躍
+        //　跳躍
         if((OVRInput.Get(OVRInput.RawButton.Y) || Input.GetKey(KeyCode.Space)))   Jump();
 
-        //正体
+        //　正体
         if (OVRInput.Get(OVRInput.RawButton.X) || Input.GetKey(KeyCode.X))  NShape();
     }
-        //前進
-        void Forward()
+
+    //　前進
+    void Forward()
         {
             transform.position += transform.forward * speed * Time.deltaTime;
 
@@ -52,12 +54,11 @@ public class AvatarController :MonoBehaviour
             if (Input.GetKey(KeyCode.UpArrow))
             {
                 Debug.Log("↑ボタンを押した。");
-
             }
         }
         
 
-         //後退
+         //　後退
          void Back()
          {
              transform.position -= transform.forward * speed * Time.deltaTime;
@@ -70,12 +71,11 @@ public class AvatarController :MonoBehaviour
              if (Input.GetKey(KeyCode.R))
              {
                 Debug.Log("↓ボタンを押した。");
-
              }
          }
          
 
-         //右回転
+         //　右回転
          void RRot()
          {
               transform.Rotate(new Vector3(0,10,0));
@@ -92,7 +92,7 @@ public class AvatarController :MonoBehaviour
          }
          
 
-         //左回転
+         //　左回転
          void LRot()
          {
               transform.Rotate(new Vector3(0, -10, 0));
@@ -109,7 +109,7 @@ public class AvatarController :MonoBehaviour
          }
          
 
-         //ジャンプ
+         //　ジャンプ
          void Jump()
          {
               if (isGround == true)//着地しているとき
@@ -133,17 +133,17 @@ public class AvatarController :MonoBehaviour
          }
          
 
-        //正体
-        void NShape()
+        //　正体
+        public void NShape()
         {
             Transform myTransform = this.transform;
 
             // ローカル座標を基準に、回転を取得
             Vector3 localAngle = myTransform.localEulerAngles;
 
-            localAngle.x = 0; // ローカル座標を基準に、x軸を軸にした回転を10度に変更
-            localAngle.y = 0; // ローカル座標を基準に、y軸を軸にした回転を10度に変更
-            localAngle.z = 0; // ローカル座標を基準に、z軸を軸にした回転を10度に変更
+            localAngle.x = 0; // ローカル座標を基準に、x軸を軸にした回転を0度に変更
+            localAngle.y = 0; // ローカル座標を基準に、y軸を軸にした回転を0度に変更
+            localAngle.z = 0; // ローカル座標を基準に、z軸を軸にした回転を0度に変更
 
             myTransform.localEulerAngles = localAngle; // 回転角度を設定
 
@@ -155,11 +155,10 @@ public class AvatarController :MonoBehaviour
              if (Input.GetKey(KeyCode.X))
              {
                   Debug.Log("Xボタンを押した。");
-
              }
         }
 
-        //地面に触れた時の処理
+        //　地面に触れた時の処理
         void OnCollisionEnter(Collision other) 
         {
             if (other.gameObject.tag == "Ground") //Groundタグのオブジェクトに触れたとき
@@ -167,5 +166,4 @@ public class AvatarController :MonoBehaviour
                 isGround = true; //isGroundをtrueにする
             }
         }
-
 }

@@ -1,0 +1,18 @@
+﻿<Properties StartupConfiguration="{B1455572-4D2D-CC40-29D8-CC5B365E29C8}|">
+  <MonoDevelop.Ide.Workbench ActiveDocument="Assets/Scripts/RpcChat.cs">
+    <Files>
+      <File FileName="Assets/Scripts/RpcChat.cs" Line="46" Column="64" />
+      <File FileName="Assets/Scripts/AvatarController.cs" />
+      <File FileName="Assets/Scripts/AvatarTransformer.cs" />
+      <File FileName="Assets/Scripts/VoiceController.cs" />
+      <File FileName="Assets/Scripts/SceneController.cs" Line="13" Column="17" />
+    </Files>
+  </MonoDevelop.Ide.Workbench>
+  <MonoDevelop.Ide.DebuggingService.PinnedWatches />
+  <MonoDevelop.Ide.Workspace ActiveConfiguration="Debug" />
+  <MonoDevelop.Ide.ItemProperties.Assembly-CSharp PreferredExecutionTarget="1ba2c34d-a29e-4d48-9ef4-51748b43fd5f" />
+  <MonoDevelop.Ide.DebuggingService.Breakpoints>
+    <BreakpointStore />
+  </MonoDevelop.Ide.DebuggingService.Breakpoints>
+  <MultiItemStartupConfigurations />
+</Properties>

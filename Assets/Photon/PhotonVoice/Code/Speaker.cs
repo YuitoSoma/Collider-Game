@@ -87,7 +87,7 @@ namespace Photon.Voice.Unity
         /// <summary>Is the speaker playing right now.</summary>
         public bool IsPlaying
         {
-            get { return this.Initialized && this.audioOutput.IsPlaying; }
+            get { return this.IsInitialized && this.audioOutput.IsPlaying; }
         }
 
         /// <summary>Smoothed difference between (jittering) stream and (clock-driven) audioOutput.</summary>
@@ -118,6 +118,11 @@ namespace Photon.Voice.Unity
         /// USE IN EDITOR ONLY
         /// </summary>
         public RemoteVoiceLink RemoteVoiceLink
+        {
+            get { return this.remoteVoiceLink; }
+        }
+        #else
+        internal RemoteVoiceLink RemoteVoiceLink
         {
             get { return this.remoteVoiceLink; }
         }
@@ -190,7 +195,7 @@ namespace Photon.Voice.Unity
             }
         }
         
-        internal bool Initialized
+        internal bool IsInitialized
         {
             get { return this.audioOutput != null; }
         }
@@ -217,7 +222,7 @@ namespace Photon.Voice.Unity
 
         private void Initialize()
         {
-            if (this.Initialized)
+            if (this.IsInitialized)
             {
                 if (this.Logger.IsWarningEnabled)
                 {
@@ -264,20 +269,19 @@ namespace Photon.Voice.Unity
                 }
                 return false;
             }
-            if (!this.Initialized)
+            if (!this.IsInitialized)
             {
                 this.Initialize();
             }
             if (this.Logger.IsDebugEnabled)
             {
-                this.Logger.LogDebug("OnRemoteVoiceInfo {0}/{1}", stream.PlayerId, stream.PlayerId);
+                this.Logger.LogDebug("OnRemoteVoiceInfo {0}", stream);
             }
             if (this.IsLinked)
             {
                 if (this.Logger.IsWarningEnabled)
                 {
-                    this.Logger.LogWarning("Speaker already linked to {0}/{1}, cancelled linking to {2}/{3}",
-                        this.remoteVoiceLink.PlayerId, this.remoteVoiceLink.VoiceId, stream.PlayerId, stream.VoiceId);
+                    this.Logger.LogWarning("Speaker already linked to {0}, cancelled linking to {1}", this.remoteVoiceLink, stream);
                 }
                 return false;
             }
@@ -285,14 +289,13 @@ namespace Photon.Voice.Unity
             {
                 if (this.Logger.IsErrorEnabled)
                 {
-                    this.Logger.LogError("Received voice info channels is not expected: {0} <= 0, cancelled linking to {1}/{2}", stream.Info.Channels, 
-                        stream.PlayerId, stream.VoiceId);
+                    this.Logger.LogError("Received voice info channels is not expected (<= 0), cancelled linking to {0}", stream);
                 }
                 return false;
             }
             this.remoteVoiceLink = stream;
             this.remoteVoiceLink.RemoteVoiceRemoved += this.OnRemoteVoiceRemove;
-            if (this.Initialized)
+            if (this.IsInitialized)
             {
                 if (!this.PlaybackOnlyWhenEnabled || this.isActiveAndEnabled)
                 {
@@ -307,7 +310,7 @@ namespace Photon.Voice.Unity
         {
             if (this.Logger.IsDebugEnabled)
             {
-                this.Logger.LogDebug("OnRemoteVoiceRemove {0}/{1}", this.remoteVoiceLink.PlayerId, this.remoteVoiceLink.PlayerId);
+                this.Logger.LogDebug("OnRemoteVoiceRemove {0}", this.remoteVoiceLink);
             }
             this.StopPlaying();
             if (this.OnRemoteVoiceRemoveAction != null) { this.OnRemoteVoiceRemoveAction(this); }
@@ -341,7 +344,7 @@ namespace Photon.Voice.Unity
                 }
                 return false;
             }
-            if (!this.Initialized)
+            if (!this.IsInitialized)
             {
                 if (this.Logger.IsWarningEnabled)
                 {
@@ -362,14 +365,13 @@ namespace Photon.Voice.Unity
             {
                 if (this.Logger.IsErrorEnabled)
                 {
-                    this.Logger.LogError("Cannot start playback because remoteVoiceLink.Info.Channels == 0");
+                    this.Logger.LogError("Cannot start playback because Channels == 0, stream {0}", this.remoteVoiceLink);
                 }
                 return false;
             }
             if (this.Logger.IsInfoEnabled)
             {
-                this.Logger.LogInfo("Speaker about to start playback (v#{0}/p#{1}/c#{2}), i=[{3}], d={4}", 
-                    this.remoteVoiceLink.VoiceId, this.remoteVoiceLink.PlayerId, this.remoteVoiceLink.ChannelId, voiceInfo, this.playbackDelaySettings);
+                this.Logger.LogInfo("Speaker about to start playback stream {0}, delay {1}", this.remoteVoiceLink, this.playbackDelaySettings);
             }
             this.audioOutput.Start(voiceInfo.SamplingRate, voiceInfo.Channels, voiceInfo.FrameDurationSamples);
             this.remoteVoiceLink.FloatFrameDecoded += this.OnAudioFrame;
@@ -410,7 +412,7 @@ namespace Photon.Voice.Unity
             {
                 this.Logger.LogWarning("Speaker not linked while stopping playback");
             }
-            if (this.Initialized)
+            if (this.IsInitialized)
             {
                 this.audioOutput.Stop();
             }
@@ -511,7 +513,7 @@ namespace Photon.Voice.Unity
         /// <returns>True if playback is successfully restarted.</returns>
         public bool RestartPlayback(bool reinit = false)
         {
-            if (!this.StartPlaying())
+            if (!this.StopPlayback())
             {
                 return false;
             }
@@ -559,7 +561,7 @@ namespace Photon.Voice.Unity
                     {
                         this.RestartPlayback(true);
                     } 
-                    else if (this.Initialized)
+                    else if (this.IsInitialized)
                     {
                         this.audioOutput = null;
                         this.Initialize();

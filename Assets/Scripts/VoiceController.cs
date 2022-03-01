@@ -4,6 +4,7 @@ using UnityEngine;
 public class VoiceController : MonoBehaviour
 {
     public Recorder recorder;
+
     void Update()
     {
         //再開
@@ -14,13 +15,11 @@ public class VoiceController : MonoBehaviour
             if (OVRInput.Get(OVRInput.RawButton.A))
             {
                 Debug.Log("Aボタンを押した。");
-
             }
 
             if (Input.GetKey(KeyCode.R))
             {
                 Debug.Log("Rボタンを押した。");
-
             }
 
         }
@@ -33,13 +32,11 @@ public class VoiceController : MonoBehaviour
             if (OVRInput.Get(OVRInput.RawButton.B))
             {
                 Debug.Log("Bボタンを押した。");
-
             }
 
             if (Input.GetKey(KeyCode.M))
             {
                 Debug.Log("Mボタンを押した。");
-
             }
         }
     }

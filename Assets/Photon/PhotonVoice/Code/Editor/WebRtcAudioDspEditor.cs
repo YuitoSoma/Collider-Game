@@ -58,9 +58,9 @@ namespace Photon.Voice.Unity.Editor
                 EditorGUILayout.HelpBox(message, MessageType.Warning);
                 #endif
             }
-            if (!this.processor.enabled)
+            if (!this.processor.isActiveAndEnabled && this.processor.AecOnlyWhenEnabled && this.aecSp.boolValue)
             {
-                EditorGUILayout.HelpBox("WebRtcAudioDsp is disabled and will not be used.", MessageType.Warning);
+                EditorGUILayout.HelpBox("WebRtcAudioDsp is not enabled, AEC will not be used.", MessageType.Warning);
             }
             if (this.recorder != null && this.recorder.SourceType != Recorder.InputSourceType.Microphone)
             {
@@ -91,14 +91,17 @@ namespace Photon.Voice.Unity.Editor
                     this.processor.AEC = EditorGUILayout.Toggle(new GUIContent("AEC", "Acoustic Echo Cancellation"), this.processor.AEC);
                     if (this.processor.AEC)
                     {
-                        #if UNITY_ANDROID
-                        if (serializedProperty.FindPropertyRelative("AcousticEchoCancellation").boolValue)
+                        if (this.recorder.SourceType == Recorder.InputSourceType.Microphone && this.recorder.MicrophoneType == Recorder.MicType.Photon)
                         {
+                            #if UNITY_ANDROID
+                            if (serializedProperty.FindPropertyRelative("AcousticEchoCancellation").boolValue)
+                            {
+                                EditorGUILayout.HelpBox("You have enabled AEC here and are using a Photon Mic as input on the Recorder, which might add its own echo cancellation. Please use only one AEC algorithm.", MessageType.Warning);
+                            }
+                            #else
                             EditorGUILayout.HelpBox("You have enabled AEC here and are using a Photon Mic as input on the Recorder, which might add its own echo cancellation. Please use only one AEC algorithm.", MessageType.Warning);
+                            #endif
                         }
-                        #else
-                        EditorGUILayout.HelpBox("You have enabled AEC here and are using a Photon Mic as input on the Recorder, which might add its own echo cancellation. Please use only one AEC algorithm.", MessageType.Warning);
-                        #endif
                         this.processor.ReverseStreamDelayMs = EditorGUILayout.IntField(new GUIContent("ReverseStreamDelayMs", "Reverse stream delay (hint for AEC) in Milliseconds"), this.processor.ReverseStreamDelayMs);
                         this.processor.AecHighPass = EditorGUILayout.Toggle(new GUIContent("AEC High Pass"), this.processor.AecHighPass);
                     }
