@@ -2,7 +2,7 @@
 #define DLL_IMPORT_INTERNAL
 #endif
 
-#if NEEDED//UNITY_EDITOR_WIN || UNITY_STANDALONE_WIN || UNITY_WSA
+#if NONE //UNITY_EDITOR_WIN || UNITY_STANDALONE_WIN || UNITY_WSA
 // opus.* lib built from original opus repo 
 #else
 #define OPUS_EGPV // opus_egpv.* lib with interop helpers (we still may use such libs for the platforms where helpers are not required)

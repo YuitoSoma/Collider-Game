@@ -204,7 +204,7 @@ namespace Photon.Voice
 
         Queue<T[]> frameQueue = new Queue<T[]>();
         public const int FRAME_POOL_CAPACITY = 50;
-        PrimitiveArrayPool<T> framePool = new PrimitiveArrayPool<T>(FRAME_POOL_CAPACITY, "UnityAudioOut");
+        PrimitiveArrayPool<T> framePool = new PrimitiveArrayPool<T>(FRAME_POOL_CAPACITY, "AudioOutDelayControl");
         bool catchingUp = false;
 
         bool processFrame(T[] frame, int playSamplePos)
@@ -478,9 +478,16 @@ namespace Photon.Voice
 
         public void Flush()
         {
-            lock (this.frameQueue)
+            if (processInService)
             {
-                this.frameQueue.Enqueue(null);
+                lock (this.frameQueue)
+                {
+                    this.frameQueue.Enqueue(null);
+                }
+            }
+            else
+            {
+                processFrame(null, this.playLoopCount * this.bufferSamples + OutPos);
             }
         }
 

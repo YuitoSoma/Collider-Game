@@ -104,14 +104,21 @@ namespace Photon.Voice
     }
 
     /// <summary>Exception thrown if an unsupported codec is encountered.</summary>
-    /// <remarks>PhotonVoice currently only supports one Codec, <see cref="Codec.AudioOpus"></see>.
     class UnsupportedCodecException : Exception
     {
         /// <summary>Create a new UnsupportedCodecException.</summary>
         /// <param name="info">The info prepending standard message.</param>
         /// <param name="codec">The codec actually encountered.</param>
         /// <param name="logger">Loogger.</param>
-        public UnsupportedCodecException(string info, Codec codec, ILogger logger) : base("[PV] " + info + ": unsupported codec: " + codec) { }
+        public UnsupportedCodecException(string info, Codec codec) : base("[PV] " + info + ": unsupported codec: " + codec) { }
+    }
+
+    /// <summary>Exception thrown if an unsupported platform is encountered.</summary>
+    class UnsupportedPlatformException : Exception
+    {
+        /// <summary>Create a new UnsupportedPlatformException.</summary>
+        /// <param name="info">The info prepending standard message.</param>
+        public UnsupportedPlatformException(string subject, string platform = null) : base("[PV] " + subject + " does not support " + (platform == null ? "current" : platform) + " platform") { }
     }
 
     /// <summary>Enum for Media Codecs supported by PhotonVoice.</summary>

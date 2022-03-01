@@ -1,4 +1,4 @@
-﻿// ----------------------------------------------------------------------------
+// ----------------------------------------------------------------------------
 // <copyright file="Recorder.cs" company="Exit Games GmbH">
 //   Photon Voice for Unity - Copyright (C) 2018 Exit Games GmbH
 // </copyright>
@@ -16,7 +16,7 @@
 #define PHOTON_MICROPHONE_ENUMERATOR
 #endif
 
-#if UNITY_STANDALONE_OSX || UNITY_STANDALONE_WIN || UNITY_ANDROID || UNITY_IOS || UNITY_WSA
+#if UNITY_STANDALONE_OSX || UNITY_STANDALONE_WIN || UNITY_ANDROID || UNITY_IOS || UNITY_WSA || UNITY_SWITCH
 #define PHOTON_MICROPHONE_SUPPORTED_PLATFORM
 #endif
 
@@ -180,9 +180,42 @@ namespace Photon.Voice.Unity
         private string photonMicrophoneDeviceIdString;
         #endif
 
+        private object microphoneDeviceChangeDetectedLock = new object();
+        internal bool microphoneDeviceChangeDetected;
+
+        #if UNITY_SWITCH
+        private bool startPendingMicPlug;
+        #endif
+        
         #endregion
 
         #region Properties
+
+        internal bool MicrophoneDeviceChangeDetected
+        {
+            get
+            {
+                lock (this.microphoneDeviceChangeDetectedLock)
+                {
+                    return this.microphoneDeviceChangeDetected;
+                }
+            }
+            set
+            {
+                lock (this.microphoneDeviceChangeDetectedLock)
+                {
+                    if (this.microphoneDeviceChangeDetected == value)
+                    {
+                        if (this.Logger.IsWarningEnabled)
+                        {
+                            this.Logger.LogWarning("Unexpected: MicrophoneDeviceChangeDetected to be overriden with same value: {0}", value);
+                        }
+                        return;
+                    }
+                    this.microphoneDeviceChangeDetected = value;
+                }
+            }
+        }
 
         private bool subscribedToSystemChanges
         {
@@ -884,7 +917,11 @@ namespace Photon.Voice.Unity
                 if (this.reactOnSystemChanges != value)
                 {
                     this.reactOnSystemChanges = value;
+                    #if UNITY_SWITCH
+                    if (this.IsRecording || this.startPendingMicPlug)
+                    #else
                     if (this.IsRecording)
+                    #endif
                     {
                         if (this.reactOnSystemChanges)
                         {
@@ -1119,10 +1156,10 @@ namespace Photon.Voice.Unity
         /// <summary>
         /// Initializes the Recorder component to be able to transmit audio.
         /// </summary>
-        /// <param name="voiceConnection">The VoiceConnection to be used with this Recorder.</param>
-        public void Init(VoiceConnection voiceConnection)
+        /// <param name="connection">The VoiceConnection to be used with this Recorder.</param>
+        public void Init(VoiceConnection connection)
         {
-            if (voiceConnection == null)
+            if (connection == null)
             {
                 if (this.Logger.IsErrorEnabled)
                 {
@@ -1132,7 +1169,7 @@ namespace Photon.Voice.Unity
             }
             if (!this.IgnoreGlobalLogLevel)
             {
-                this.LogLevel = voiceConnection.GlobalRecordersLogLevel;
+                this.LogLevel = connection.GlobalRecordersLogLevel;
             }
             if (this.IsInitialized)
             {
@@ -1142,7 +1179,7 @@ namespace Photon.Voice.Unity
                 }
                 return;
             }
-            if (voiceConnection.VoiceClient == null)
+            if (connection.VoiceClient == null)
             {
                 if (this.Logger.IsErrorEnabled)
                 {
@@ -1150,9 +1187,9 @@ namespace Photon.Voice.Unity
                 }
                 return;
             }
-            this.voiceConnection = voiceConnection;
-            this.client = voiceConnection.VoiceClient;
-            voiceConnection.AddInitializedRecorder(this);
+            this.voiceConnection = connection;
+            this.client = connection.VoiceClient;
+            connection.AddInitializedRecorder(this);
             this.CheckAndAutoStart();
         }
 
@@ -1262,6 +1299,13 @@ namespace Photon.Voice.Unity
                 }
                 return;
             }
+            #if UNITY_SWITCH
+            this.startPendingMicPlug = false;
+            if (this.Logger.IsDebugEnabled)
+            {
+                this.Logger.LogDebug("Setting startPendingMicPlug to false because a call to StopRecording was explicity made.");
+            }
+            #endif
             this.StopRecordingInternal();
             this.recordingStoppedExplicitly = true;
         }
@@ -1419,12 +1463,24 @@ namespace Photon.Voice.Unity
                 {
                     this.Logger.LogError("Local input source setup and voice stream creation failed. No recording or transmission will be happening. See previous error log messages for more details.");
                 }
+                #if UNITY_SWITCH
+                if (this.startPendingMicPlug)
+                {
+                    if (this.Logger.IsDebugEnabled)
+                    {
+                        this.Logger.LogDebug("Subscribing to system changes to watch for when a microphone is plugged in.");
+                    }
+                    this.SubscribeToSystemChanges();
+                }
+                #endif
+                if (this.inputSource != null)
+                {
+                    this.inputSource.Dispose();
+                    this.inputSource = null;
+                }
                 return;
             }
-            if (this.ReactOnSystemChanges && !this.subscribedToSystemChanges)
-            {
-                this.SubscribeToSystemChanges();
-            }
+            this.SubscribeToSystemChanges();
             if (this.VoiceDetector != null)
             {
                 this.VoiceDetector.Threshold = this.voiceDetectionThreshold;
@@ -1517,6 +1573,7 @@ namespace Photon.Voice.Unity
                         {
                             #if PHOTON_MICROPHONE_ENUMERATOR
                             DeviceInfo hwMicDev = this.MicrophoneDevice;
+                            int hwMicDevId = hwMicDev.IsDefault ? -1 : hwMicDev.IDInt;
                             if (this.Logger.IsInfoEnabled)
                             {
                                 this.Logger.LogInfo("Setting recorder's source to Photon microphone device={0}", hwMicDev);
@@ -1532,7 +1589,7 @@ namespace Photon.Voice.Unity
                             {
                                 this.Logger.LogInfo("Setting recorder's source to WindowsAudioInPusher");
                             }
-                            this.inputSource = new Windows.WindowsAudioInPusher(hwMicDev.IDInt, this.Logger);
+                            this.inputSource = new Windows.WindowsAudioInPusher(hwMicDevId, this.Logger);
                             #elif PHOTON_MICROPHONE_WSA
                             int channels = 1;
                             if (this.Logger.IsInfoEnabled)
@@ -1551,7 +1608,13 @@ namespace Photon.Voice.Unity
                             {
                                 this.Logger.LogInfo("Setting recorder's source to MacOS.AudioInPusher");
                             }
-                            this.inputSource = new MacOS.AudioInPusher(hwMicDev.IDInt, this.Logger);
+                            this.inputSource = new MacOS.AudioInPusher(hwMicDevId, this.Logger);
+                            #elif UNITY_SWITCH && !UNITY_EDITOR
+                            if (this.Logger.IsInfoEnabled)
+                            {
+                                this.Logger.LogInfo("Setting recorder's source to Switch.AudioInPusher");
+                            }
+                            this.inputSource = new Switch.AudioInPusher(this.Logger);
                             #elif UNITY_ANDROID && !UNITY_EDITOR
                             if (this.Logger.IsInfoEnabled)
                             {
@@ -1647,8 +1710,25 @@ namespace Photon.Voice.Unity
                 {
                     this.Logger.LogError("inputSource.Channels is zero");
                 }
+                #if UNITY_SWITCH
+                this.startPendingMicPlug = true;
+                if (this.Logger.IsDebugEnabled)
+                {
+                    this.Logger.LogDebug("Setting startPendingMicPlug true to delay recorder start until a microphone is available (plugged in).");
+                }
+                #endif
                 return LocalVoiceAudioDummy.Dummy;
             }
+            #if UNITY_SWITCH
+            else if (this.startPendingMicPlug) 
+            {
+                if (this.Logger.IsDebugEnabled)
+                {
+                    this.Logger.LogDebug("Setting startPendingMicPlug to false as apparently recorder is starting successfully after a microphone became available (is plugged in).");
+                }
+                this.startPendingMicPlug = false;
+            }
+            #endif
             if (this.TrySamplingRateMatch && this.inputSource.SamplingRate != samplingRateInt)
             {
                 effectiveSamplingRate = this.GetSupportedSamplingRate(this.inputSource.SamplingRate);
@@ -1709,19 +1789,18 @@ namespace Photon.Voice.Unity
             {
                 this.Logger.LogDebug("Recorder is about to be destroyed, removing local voice.");
             }
-            // no need to send PhotonVoiceRemoved since object is destroyed
-            this.RemoveVoice(false);
+            this.RemoveVoice();
             if (this.IsInitialized)
             {
                 this.voiceConnection.RemoveInitializedRecorder(this);
             }
         }
 
-        private void RemoveVoice(bool sendUnityMsg)
+        private void RemoveVoice()
         {
             if (this.Logger.IsDebugEnabled)
             {
-                this.Logger.LogDebug("RemovingVoice(sendUnityMsg:{0})", sendUnityMsg);
+                this.Logger.LogDebug("RemovingVoice()");
             }
             if (this.subscribedToSystemChanges)
             {
@@ -1745,10 +1824,7 @@ namespace Photon.Voice.Unity
                 this.inputSource.Dispose();
                 this.inputSource = null;
             }
-            if (sendUnityMsg)
-            {
-                this.gameObject.SendMessage("PhotonVoiceRemoved", SendMessageOptions.DontRequireReceiver);
-            }
+            this.gameObject.SendMessage("PhotonVoiceRemoved", SendMessageOptions.DontRequireReceiver);
             this.isRecording = false;
             this.RequiresRestart = false;
         }
@@ -1761,7 +1837,7 @@ namespace Photon.Voice.Unity
             }
             if (this.SkipDeviceChangeChecks || deviceWasChanged)
             {
-                this.HandleDeviceChange();
+                this.MicrophoneDeviceChangeDetected = true;
             }
         }
 
@@ -1771,11 +1847,15 @@ namespace Photon.Voice.Unity
             {
                 this.Logger.LogInfo("Microphones change detected by Photon native plugin");
             }
-            this.HandleDeviceChange();
+            this.MicrophoneDeviceChangeDetected = true;
         }
 
-        private void HandleDeviceChange()
+        internal void HandleDeviceChange()
         {
+            if (!this.MicrophoneDeviceChangeDetected && this.Logger.IsWarningEnabled)
+            {
+                this.Logger.LogWarning("Unexpected: HandleDeviceChange called while MicrophoneDeviceChangedDetected is false.");
+            }
             #if PHOTON_MICROPHONE_ENUMERATOR
             #pragma warning disable 612
             if (photonMicrophoneEnumerator != null)
@@ -1820,6 +1900,7 @@ namespace Photon.Voice.Unity
                 {
                     if (this.ResetLocalAudio())
                     {
+                        this.MicrophoneDeviceChangeDetected = false;
                         if (this.Logger.IsInfoEnabled)
                         {
                             this.Logger.LogInfo("Local audio reset as a result of audio config/device change.");
@@ -1836,10 +1917,40 @@ namespace Photon.Voice.Unity
                     }
                 }
             }
+            #if UNITY_SWITCH
+            else if (this.startPendingMicPlug)
+            {
+                if (this.Logger.IsDebugEnabled)
+                {
+                    this.Logger.LogDebug("Starting recording because this was requested and apparently a microphone is now available (plugged in).");
+                }
+                this.StartRecording();
+            }
+            #endif
         }
 
         private void SubscribeToSystemChanges()
         {
+            if (this.Logger.IsDebugEnabled)
+            {
+                this.Logger.LogDebug("Subscribing to system (audio) changes.");
+            }
+            if (!this.ReactOnSystemChanges)
+            {
+                if (this.Logger.IsDebugEnabled)
+                {
+                    this.Logger.LogDebug("ReactOnSystemChanges is false, not subscribed to system (audio) changes.");
+                }
+                return;
+            }
+            if (this.subscribedToSystemChanges)
+            {
+                if (this.Logger.IsWarningEnabled)
+                {
+                    this.Logger.LogWarning("Already subscribed to system (audio) changes.");
+                }
+                return;
+            }
             #if !UNITY_EDITOR && (UNITY_ANDROID || UNITY_IOS)
             if (this.SourceType == InputSourceType.Microphone && this.MicrophoneType == MicType.Photon)
             {
@@ -1879,6 +1990,12 @@ namespace Photon.Voice.Unity
 
         private void UnsubscribeFromSystemChanges()
         {
+            #if UNITY_SWITCH
+            if (this.startPendingMicPlug && this.Logger.IsWarningEnabled)
+            {
+                this.Logger.LogWarning("Unsubscribing from system changes while startPendingMicPlug is true, is this expected?");
+            }
+            #endif
             if (this.subscribedToSystemChangesUnity)
             {
                 AudioSettings.OnAudioConfigurationChanged -= this.OnAudioConfigChanged;
@@ -2074,12 +2191,19 @@ namespace Photon.Voice.Unity
                     {
                         this.Logger.LogInfo("Stopping recording as application went to background or paused");
                     }
-                    this.RemoveVoice(true);
+                    this.RemoveVoice();
                 }
             }
             else
             {
-                if (this.StopRecordingWhenPaused)
+                if (!this.StopRecordingWhenPaused)
+                {
+                    if (this.ResetLocalAudio() && this.Logger.IsInfoEnabled)
+                    {
+                        this.Logger.LogInfo("Local audio reset as application is back from background or unpaused");
+                    }
+                }
+                else if (this.wasRecordingBeforePause)
                 {
                     if (!this.IsRecording)
                     {
@@ -2092,13 +2216,6 @@ namespace Photon.Voice.Unity
                     else if (this.Logger.IsWarningEnabled)
                     {
                         this.Logger.LogWarning("Unexpected: Application back from background or unpaused, isPausedOrInBackground = true, wasRecordingBeforePause = true, StopRecordingWhenPaused = true, IsRecording = true");
-                    }
-                }
-                else
-                {
-                    if (this.ResetLocalAudio() && this.Logger.IsInfoEnabled)
-                    {
-                        this.Logger.LogInfo("Local audio reset as application is back from background or unpaused");
                     }
                 }
                 this.wasRecordingBeforePause = false;
@@ -2253,7 +2370,11 @@ namespace Photon.Voice.Unity
                 this.Logger.LogDebug("Stopping recording");
             }
             this.wasRecordingBeforePause = false;
-            this.RemoveVoice(true);
+            this.RemoveVoice();
+            if (this.MicrophoneDeviceChangeDetected)
+            {
+                this.MicrophoneDeviceChangeDetected = false;
+            }
         }
 
         internal void CheckAndAutoStart()

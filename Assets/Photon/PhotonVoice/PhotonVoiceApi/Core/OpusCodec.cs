@@ -33,7 +33,7 @@ namespace Photon.Voice
                 else if (typeof(B) == typeof(short[]))
                     return new EncoderShort(i, logger);
                 else
-                    throw new UnsupportedCodecException("Factory.CreateEncoder<" + typeof(B) + ">", i.Codec, logger);
+                    throw new UnsupportedCodecException("Factory.CreateEncoder<" + typeof(B) + ">", i.Codec);
             }
         }
 
@@ -47,7 +47,7 @@ namespace Photon.Voice
                 else if (x[0].GetType() == typeof(short))
                     return new EncoderShort(i, logger);
                 else
-                    throw new UnsupportedCodecException("EncoderFactory.Create<" + x[0].GetType() + ">", i.Codec, logger);
+                    throw new UnsupportedCodecException("EncoderFactory.Create<" + x[0].GetType() + ">", i.Codec);
             }
         }
 

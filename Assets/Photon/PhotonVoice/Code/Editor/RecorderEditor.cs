@@ -627,7 +627,6 @@ namespace Photon.Voice.Unity.Editor
         {
             if (UnityMicrophone.devices.Length == 0)
             {
-                this.recorder.UnityMicrophoneDevice = null;
                 this.unityMicrophoneDeviceIndex = 0;
             }
             else

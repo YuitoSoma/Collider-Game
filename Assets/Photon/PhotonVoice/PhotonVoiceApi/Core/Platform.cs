@@ -26,6 +26,8 @@ namespace Photon.Voice
             return new IOS.AudioInChangeNotifier(callback, logger);
 #elif UNITY_EDITOR_OSX || UNITY_STANDALONE_OSX
             return new MacOS.AudioInChangeNotifier(callback, logger);
+#elif UNITY_SWITCH && !UNITY_EDITOR
+            return new Switch.AudioInChangeNotifier(callback, logger);
 #else
             return new AudioInChangeNotifierNotSupported(callback, logger);
 #endif
@@ -38,8 +40,44 @@ namespace Photon.Voice
                 case Codec.AudioOpus:
                     return OpusCodec.Factory.CreateEncoder<T[]>(info, logger);
                 default:
-                    throw new UnsupportedCodecException("Platform.CreateDefaultAudioEncoder", info.Codec, logger);
+                    throw new UnsupportedCodecException("Platform.CreateDefaultAudioEncoder", info.Codec);
             }
+        }
+
+        static public IAudioDesc CreateDefaultAudioSource(ILogger logger, DeviceInfo dev, int samplingRate, int channels, object otherParams = null)
+        {
+#if UNITY_STANDALONE_WIN || UNITY_EDITOR_WIN
+            return new Windows.WindowsAudioInPusher(dev.IsDefault ? -1 : dev.IDInt, logger);
+#elif UNITY_IOS && !UNITY_EDITOR
+            if (otherParams == null)
+            {
+                return new IOS.AudioInPusher(IOS.AudioSessionParametersPresets.VoIP, logger);
+            }
+            else
+            {
+                return new IOS.AudioInPusher((IOS.AudioSessionParameters)otherParams, logger);
+            }
+#elif UNITY_STANDALONE_OSX || UNITY_EDITOR_OSX
+            return new MacOS.AudioInPusher(dev.IsDefault ? -1 : dev.IDInt, logger);
+#elif UNITY_ANDROID && !UNITY_EDITOR
+            if (otherParams == null)
+            {
+                return new Unity.AndroidAudioInAEC(logger, true, true, true);
+            }
+            else
+            {
+                var p = (Unity.AndroidAudioInParameters)otherParams;
+                return new Unity.AndroidAudioInAEC(logger, p.EnableAEC, p.EnableAGC, p.EnableNS);
+            }            
+#elif UNITY_WSA && !UNITY_EDITOR
+            return new UWP.AudioInPusher(logger, samplingRate, channels, dev.IsDefault ? "" : dev.IDString);
+#elif UNITY_SWITCH && !UNITY_EDITOR
+            return new Switch.AudioInPusher(logger);
+#elif UNITY_5_3_OR_NEWER // #if UNITY
+            return new Unity.MicWrapper(dev.IDString, samplingRate, logger);
+#else
+            throw new UnsupportedPlatformException("Platform.CreateDefaultAudioSource");
+#endif
         }
 
 #if PHOTON_VOICE_VIDEO_ENABLE
@@ -71,7 +109,7 @@ namespace Photon.Voice
                     return new MacOS.VideoEncoder(logger, info);
 #endif
                 default:
-                    throw new UnsupportedCodecException("Platform.CreateDefaultVideoEncoder", info.Codec, logger);
+                    throw new UnsupportedCodecException("Platform.CreateDefaultVideoEncoder", info.Codec);
             }
         }
 
@@ -93,7 +131,7 @@ namespace Photon.Voice
                     break;
 #endif
                 default:
-                    throw new UnsupportedCodecException("Platform.CreateDefaultVideoDecoder", info.Codec, logger);
+                    throw new UnsupportedCodecException("Platform.CreateDefaultVideoDecoder", info.Codec);
             }
         }
 
@@ -107,13 +145,13 @@ namespace Photon.Voice
             {
                 return new IOS.VideoRecorderLayer(logger, info, onReady);
             }
-            throw new UnsupportedCodecException("Platform.CreateDefaultVideoRecorder", info.Codec, logger);
+            throw new UnsupportedCodecException("Platform.CreateDefaultVideoRecorder", info.Codec);
 #elif WINDOWS_UWP || (UNITY_WSA && !UNITY_EDITOR)
             if (info.Codec == Codec.VideoH264)
             {
                 return new UWP.VideoRecorderMediaPlayerElement(logger, info, camDevice.IDString, onReady);
             }
-            throw new UnsupportedCodecException("Platform.CreateDefaultVideoRecorder", info.Codec, logger);
+            throw new UnsupportedCodecException("Platform.CreateDefaultVideoRecorder", info.Codec);
 #else // multi-platform VideoRecorderUnity
             var ve = CreateDefaultVideoEncoder(logger, info);
 #if UNITY_5_3_OR_NEWER // #if UNITY
@@ -136,14 +174,14 @@ namespace Photon.Voice
                 var vd = new IOS.VideoDecoderLayer(logger);
                 return new VideoPlayer(vd, vd.PreviewLayer, info.Width, info.Height, onReady);
             }
-            throw new UnsupportedCodecException("Platform.CreateDefaultVideoPlayer", info.Codec, logger);
+            throw new UnsupportedCodecException("Platform.CreateDefaultVideoPlayer", info.Codec);
 #elif WINDOWS_UWP || (UNITY_WSA && !UNITY_EDITOR)
             if (info.Codec == Codec.VideoH264)
             {
                 var vd = new UWP.VideoDecoderMediaPlayerElement(logger, info);
                 return new VideoPlayer(vd, vd.PreviewMediaPlayerElement, info.Width, info.Height, onReady);
             }
-            throw new UnsupportedCodecException("Platform.CreateDefaultVideoPlayer", info.Codec, logger);
+            throw new UnsupportedCodecException("Platform.CreateDefaultVideoPlayer", info.Codec);
 #else  // multi-platform VideoPlayerUnity or generic VideoPlayer
             var vd = CreateDefaultVideoDecoder(logger, info);
 #if UNITY_5_3_OR_NEWER // #if UNITY
@@ -185,13 +223,13 @@ namespace Photon.Voice
             {
                 return new IOS.VideoRecorderUnityTexture(logger, info, onReady);
             }
-            throw new UnsupportedCodecException("Platform.CreateVideoRecorderUnityTexture", info.Codec, logger);
+            throw new UnsupportedCodecException("Platform.CreateVideoRecorderUnityTexture", info.Codec);
 #elif WINDOWS_UWP || (UNITY_WSA && !UNITY_EDITOR)
             if (info.Codec == Codec.VideoH264)
             {
                 return new UWP.VideoRecorderUnityTexture(logger, info, camDevice.IDString, onReady);
             }
-            throw new UnsupportedCodecException("Platform.CreateVideoRecorderUnityTexture", info.Codec, logger);
+            throw new UnsupportedCodecException("Platform.CreateVideoRecorderUnityTexture", info.Codec);
 #else // multi-platform VideoRecorderUnity
             var ve = CreateDefaultVideoEncoder(logger, info);
             return new Unity.VideoRecorderUnity(ve, null, camDevice.IDString, info.Width, info.Height, info.FPS, onReady);
@@ -207,13 +245,13 @@ namespace Photon.Voice
             {
                 return new IOS.VideoPlayerUnityTexture(logger, info, onReady);
             }
-            throw new UnsupportedCodecException("Platform.CreateVideoPlayerUnityTexture", info.Codec, logger);
+            throw new UnsupportedCodecException("Platform.CreateVideoPlayerUnityTexture", info.Codec);
 #elif WINDOWS_UWP || (UNITY_WSA && !UNITY_EDITOR)
             if (info.Codec == Codec.VideoH264)
             {
                 return new UWP.VideoPlayerUnityTexture(logger, info, onReady);
             }
-            throw new UnsupportedCodecException("Platform.CreateVideoPlayerUnityTexture", info.Codec, logger);
+            throw new UnsupportedCodecException("Platform.CreateVideoPlayerUnityTexture", info.Codec);
 #else  // multi-platform VideoPlayerUnity
             var vd = CreateDefaultVideoDecoder(logger, info);
             var vp = new Unity.VideoPlayerUnity(vd, onReady);

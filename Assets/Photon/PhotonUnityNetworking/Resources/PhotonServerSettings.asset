@@ -13,10 +13,10 @@ MonoBehaviour:
   m_Name: PhotonServerSettings
   m_EditorClassIdentifier: 
   AppSettings:
-    AppIdRealtime: f436376c-ef30-4f8d-acc2-99d9a5e8baa8
+    AppIdRealtime: 9aac8700-00cf-499d-af16-a59516663221
     AppIdFusion: 
-    AppIdChat: 
-    AppIdVoice: 6b254c2e-2dba-4273-881b-839936783d1a
+    AppIdChat: f9fb28df-a6c0-498d-ad50-e6351bf92825
+    AppIdVoice: b9dd42bd-e5e9-442d-aa67-dd8802a3c000
     AppVersion: 1.0
     UseNameServer: 1
     FixedRegion: jp
@@ -30,7 +30,7 @@ MonoBehaviour:
     NetworkLogging: 1
   DevRegion: jp
   PunLogging: 0
-  EnableSupportLogger: 1
+  EnableSupportLogger: 0
   RunInBackground: 1
   StartInOfflineMode: 0
   RpcList:
@@ -42,6 +42,11 @@ MonoBehaviour:
   - Fire
   - HeresWhy
   - RespawnSpaceship
+  - Chat
+  - RpcSendMessage
+  - RpcMassageManager
+  - GetInputText
+  - GetName
   DisableAutoOpenWizard: 1
   ShowSettings: 1
   DevRegionSetOnce: 0
