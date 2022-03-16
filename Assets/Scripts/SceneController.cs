@@ -10,7 +10,7 @@ public class SceneController : MonoBehaviourPunCallbacks
     public GameObject OVRCamera;
     public static string avatarName;
 
-    void Start()
+    void Awake()
     {
         // PhotonServerSettingsの設定内容を使ってマスターサーバーへ接続する
         PhotonNetwork.ConnectUsingSettings();
@@ -26,7 +26,7 @@ public class SceneController : MonoBehaviourPunCallbacks
     }
 
     //アバターのリソースからランダムに1つ選ぶ
-     public string SampleAvatar()
+     private string SampleAvatar()
      {
         int index = Random.Range(0, avatarObject.Length);
         avatarResource[index] = avatarObject[index].name;

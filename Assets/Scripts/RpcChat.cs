@@ -8,44 +8,48 @@ public class RpcChat : MonoBehaviourPun
     string message;
     string getInputText;
     string getName;
-    
-    public InputField inputField;
     public Text chatText;
     public GameObject window;
-    public GameObject Chat;
-
-    void Start()
-    {
-        inputField = inputField.GetComponent<InputField>();
-        chatText.text = "";
-        Chat.SetActive(false);
-    }
+    public Text inputtext;
+    public Toggle toggle;
+    private TouchScreenKeyboard overlayKeyboard;
 
     void Update()
     {
-        //　チャットの表示
-        if (Input.GetKeyDown(KeyCode.C))
+        // 画面表示
+        InputText();
+
+        if (TouchScreenKeyboard.visible == false)
         {
-            if (Chat.activeSelf)
-            {
-                //　非表示
-                Chat.SetActive(false);
-            }
-            else
-            {
-                //　表示
-                Chat.SetActive(true);
-            }
+            toggle.isOn = false;
         }
     }
 
     //　メッセージを送信
     public void SendMessage()
     {
+        GetName();
         message = GetInputText();
         photonView.RPC(nameof(RpcSendMessage), RpcTarget.All, message);
-        inputField.text = "";
         window.GetComponent<ScrollRect>().verticalNormalizedPosition = 0;
+        overlayKeyboard.text = "";
+    }
+
+    // キーボード表示
+    public void Keyboard()
+    {
+        if(toggle.isOn == true)
+        {
+            overlayKeyboard = TouchScreenKeyboard.Open("", TouchScreenKeyboardType.Default);
+        }
+            
+    }
+
+    //インプット表示
+    [PunRPC]
+    void InputText()
+    {
+        inputtext.text = overlayKeyboard.text;
     }
 
     //　アバターの名前を取得
@@ -62,7 +66,7 @@ public class RpcChat : MonoBehaviourPun
     string GetInputText()
     {
         getInputText = "";
-        getInputText = "  " + getName + " : " + inputField.text;
+        getInputText = "  " + getName + " : " + inputtext.text;
         return getInputText;
     }
 

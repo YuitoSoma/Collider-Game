@@ -5,39 +5,21 @@ public class VoiceController : MonoBehaviour
 {
     public Recorder recorder;
 
-    void Update()
+    void Awake()
     {
-        //再開
-        if (OVRInput.Get(OVRInput.RawButton.A) || Input.GetKey(KeyCode.R))
+        recorder.TransmitEnabled = true;
+    }
+    public void voiceController()
+    {
+        if (recorder.TransmitEnabled)
         {
-            recorder.TransmitEnabled = true;
-
-            if (OVRInput.Get(OVRInput.RawButton.A))
-            {
-                Debug.Log("Aボタンを押した。");
-            }
-
-            if (Input.GetKey(KeyCode.R))
-            {
-                Debug.Log("Rボタンを押した。");
-            }
-
+              //ミュート
+              recorder.TransmitEnabled = false;
         }
-
-        //ミュート
-        if (OVRInput.Get(OVRInput.RawButton.B) || Input.GetKey(KeyCode.M))
+        else
         {
-            recorder.TransmitEnabled = false;
-
-            if (OVRInput.Get(OVRInput.RawButton.B))
-            {
-                Debug.Log("Bボタンを押した。");
-            }
-
-            if (Input.GetKey(KeyCode.M))
-            {
-                Debug.Log("Mボタンを押した。");
-            }
+              //再開
+              recorder.TransmitEnabled = true;
         }
     }
 }
