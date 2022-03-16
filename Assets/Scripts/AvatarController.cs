@@ -26,7 +26,7 @@ public class AvatarController :MonoBehaviour
         if (OVRInput.Get(OVRInput.RawButton.RHandTrigger) || Input.GetKey(KeyCode.UpArrow)) Forward();
 
         //　後退
-        if (OVRInput.Get(OVRInput.RawButton.LHandTrigger) || Input.GetKey(KeyCode.DownArrow))   Back();
+        //if (OVRInput.Get(OVRInput.RawButton.LHandTrigger) || Input.GetKey(KeyCode.DownArrow))   Back();
 
         //　右回転
         if (OVRInput.Get(OVRInput.RawButton.RIndexTrigger) || Input.GetKey(KeyCode.RightArrow)) RRot();
@@ -35,14 +35,14 @@ public class AvatarController :MonoBehaviour
         if (OVRInput.Get(OVRInput.RawButton.LIndexTrigger) || Input.GetKey(KeyCode.LeftArrow))  LRot();
 
         //　跳躍
-        if((OVRInput.Get(OVRInput.RawButton.Y) || Input.GetKey(KeyCode.Space)))   Jump();
+        //if((OVRInput.Get(OVRInput.RawButton.Y) || Input.GetKey(KeyCode.Space)))   Jump();
 
         //　正体
-        if (OVRInput.Get(OVRInput.RawButton.X) || Input.GetKey(KeyCode.X))  NShape();
+        //if (OVRInput.Get(OVRInput.RawButton.X) || Input.GetKey(KeyCode.X))  NShape();
     }
 
     //　前進
-    void Forward()
+        void Forward()
         {
             transform.position += transform.forward * speed * Time.deltaTime;
 
@@ -59,7 +59,7 @@ public class AvatarController :MonoBehaviour
         
 
          //　後退
-         void Back()
+         /*void Back()
          {
              transform.position -= transform.forward * speed * Time.deltaTime;
 
@@ -68,11 +68,11 @@ public class AvatarController :MonoBehaviour
                 Debug.Log("左中指グリップを押した");
              }
 
-             if (Input.GetKey(KeyCode.R))
+             if (Input.GetKey(KeyCode.DownArrow))
              {
                 Debug.Log("↓ボタンを押した。");
              }
-         }
+         }*/
          
 
          //　右回転
@@ -110,7 +110,7 @@ public class AvatarController :MonoBehaviour
          
 
          //　ジャンプ
-         void Jump()
+         /*void Jump()
          {
               if (isGround == true)//着地しているとき
               {
@@ -130,11 +130,11 @@ public class AvatarController :MonoBehaviour
               {
                   Debug.Log("スペースボタンを押した。");
               }
-         }
+         }*/
          
 
         //　正体
-        public void NShape()
+        /*public void NShape()
         {
             Transform myTransform = this.transform;
 
@@ -156,7 +156,7 @@ public class AvatarController :MonoBehaviour
              {
                   Debug.Log("Xボタンを押した。");
              }
-        }
+        }*/
 
         //　地面に触れた時の処理
         void OnCollisionEnter(Collision other) 
